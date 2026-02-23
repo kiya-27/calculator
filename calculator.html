@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ultimate Calculator</title>
+<style>
+:root{--bg:#020617;--panel:#020617;--text:#e5e7eb;--btn:#1e293b}
+body.light{--bg:#f1f5f9;--panel:#fff;--text:#020617;--btn:#e5e7eb}
+body{font-family:Arial;background:var(--bg);color:var(--text);display:flex;justify-content:center;padding:30px}
+.app{width:460px;background:var(--panel);border-radius:16px;padding:16px;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+h2{text-align:center}
+.display,.result{border:1px solid #1e293b;border-radius:8px;padding:10px;text-align:right;margin-bottom:6px}
+.display{font-size:22px}
+.buttons{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+button{padding:10px;border:none;border-radius:8px;background:var(--btn);color:var(--text);cursor:pointer}
+button.equal{grid-column:span 2;background:#16a34a}
+button.clear{background:#dc2626}
+.section{margin-top:14px;border-top:1px solid #1e293b;padding-top:10px}
+select,input{width:100%;padding:6px;margin-top:6px;border-radius:6px;border:none}
+.history{max-height:120px;overflow-y:auto;font-size:13px;border:1px solid #1e293b;border-radius:8px;padding:6px;margin-top:6px}
+.clear-history{background:#dc2626;color:white;padding:6px;border-radius:6px;margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<div class="app">
+<h2>Ultimate Calculator</h2>
+
+<button onclick="toggleTheme()">🌙 / ☀️</button>
+
+<div id="display" class="display">0</div>
+<div id="result" class="result">Result</div>
+
+<div class="buttons">
+<button class="clear" onclick="clearAll()">C</button>
+
+<button onclick="append('7')">7</button><button onclick="append('8')">8</button><button onclick="append('9')">9</button>
+<button onclick="append('/')">÷</button><button onclick="append('*')">×</button>
+<button onclick="append('4')">4</button><button onclick="append('5')">5</button><button onclick="append('6')">6</button>
+<button onclick="append('-')">−</button><button onclick="append('+')">+</button>
+<button onclick="append('1')">1</button><button onclick="append('2')">2</button><button onclick="append('3')">3</button>
+<button onclick="append('0')">0</button><button onclick="append('.')">.</button>
+<button class="equal" onclick="calculate()">=</button>
+</div>
+
+<div class="section">
+<h3>Unit Converter</h3>
+<input id="convVal" type="number" placeholder="Value">
+<select id="convType" onchange="convert()">
+<option value="cm-ft">cm → ft</option>
+<option value="ft-cm">ft → cm</option>
+<option value="kg-lb">kg → lb</option>
+<option value="lb-kg">lb → kg</option>
+<option value="c-f">°C → °F</option>
+<option value="f-c">°F → °C</option>
+</select>
+<div id="convResult" class="result"></div>
+</div>
+
+<div class="section">
+<h3>Currency Converter</h3>
+<input id="amount" type="number" placeholder="Amount">
+<select id="from"></select>
+<select id="to"></select>
+<div id="currencyResult" class="result"></div>
+</div>
+
+<div class="section">
+<h3>History</h3>
+<button class="clear-history" onclick="clearHistory()">Clear History</button>
+<div id="history" class="history"></div>
+</div>
+
+</div>
+
+<script>
+const display=document.getElementById('display');
+const resultBox=document.getElementById('result');
+const historyDiv=document.getElementById('history');
+let history=[];
+
+function append(v){if(display.textContent==='0')display.textContent='';display.textContent+=v}
+function clearAll(){display.textContent='0';resultBox.textContent='Result'}
+function calculate(){try{const r=eval(display.textContent);resultBox.textContent=r;addHistory(display.textContent+' = '+r)}catch{resultBox.textContent='Error'}}
+function addHistory(t){history.unshift(t);history=history.slice(0,30);historyDiv.innerHTML=history.map(h=>`<div>${h}</div>`).join('')}
+function clearHistory(){history=[];historyDiv.innerHTML=''}
+function toggleTheme(){document.body.classList.toggle('light')}
+
+function convert(){
+const v=parseFloat(convVal.value);if(isNaN(v))return;
+const m={ "cm-ft":v/30.48+" ft","ft-cm":v*30.48+" cm","kg-lb":v*2.20462+" lb","lb-kg":v/2.20462+" kg","c-f":v*9/5+32+" °F","f-c":(v-32)*5/9+" °C"};
+convResult.textContent=parseFloat(m[convType.value]).toFixed(2)+m[convType.value].replace(/[0-9.]/g,'');
+addHistory("Convert: "+v+" → "+convResult.textContent)
+}
+
+/* EXTENDED CURRENCY RATES (BASE: USD) */
+const rates={
+USD:1,EUR:0.92,GBP:0.79,JPY:148.3,PHP:56.2,
+AUD:1.52,CAD:1.36,NZD:1.63,CHF:0.88,
+CNY:7.12,KRW:1325,INR:83.1,PKR:279,
+BDT:110,LKR:320,THB:35.9,MYR:4.73,
+IDR:15550,SGD:1.35,VND:24500,
+AED:3.67,SAR:3.75,QAR:3.64,KWD:0.31,
+ZAR:18.6,NGN:1400,EGP:30.9,
+BRL:4.95,MXN:17.1,ARS:850,
+SEK:10.4,NOK:10.6,DKK:6.9,
+PLN:4.0,CZK:22.9,HUF:355
+};
+
+Object.keys(rates).forEach(c=>{
+from.innerHTML+=`<option>${c}</option>`;
+to.innerHTML+=`<option>${c}</option>`;
+});
+
+function convertCurrency(){
+const a=parseFloat(amount.value);if(isNaN(a))return;
+const r=(a/rates[from.value]*rates[to.value]).toFixed(2);
+currencyResult.textContent=r+" "+to.value;
+addHistory("Currency: "+a+" "+from.value+" → "+r+" "+to.value)
+}
+
+amount.oninput=from.onchange=to.onchange=convertCurrency;
+</script>
+
+</body>
+</html>
